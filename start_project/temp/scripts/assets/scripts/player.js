@@ -34,15 +34,20 @@ cc.Class({
 
     //跳跃
     setJumpAction: function setJumpAction() {
+        var _squashDuration = 0.1;
         //跳跃
         var self = this;
         var jumpUp = cc.moveBy(self.jumpTime, cc.p(0, self.jumpHeight)).easing(cc.easeCubicActionOut());
         //下落
         var jumpDown = cc.moveBy(self.jumpTime, cc.p(0, -self.jumpHeight)).easing(cc.easeCubicActionIn());
+        //形变
+        var squash = cc.scaleTo(_squashDuration, 1, 0.6);
+        var stretch = cc.scaleTo(_squashDuration, 1, 1.2);
+        var scaleBack = cc.scaleTo(_squashDuration, 1, 1);
         //设置音乐回调
         var callback = cc.callFunc(this.playJumpSound, this);
         //循环
-        return cc.repeatForever(cc.sequence(jumpUp, jumpDown, callback));
+        return cc.repeatForever(cc.sequence(squash, stretch, jumpUp, scaleBack, jumpDown, callback));
     },
 
     //调用音乐函数
@@ -78,6 +83,26 @@ cc.Class({
                         self.accRight = false;
                         break;
                 }
+            }
+        }, self.node);
+
+        cc.eventManager.addListener({
+            event: cc.EventListener.TOUCH_ONE_BY_ONE,
+            onTouchBegan: function onTouchBegan(touch, event) {
+                var touchLoc = touch.getLocation();
+                console.log('touch in pos：', touchLoc.x, touchLoc.y);
+                if (touchLoc.x >= cc.winSize.width / 2) {
+                    self.accLeft = false;
+                    self.accRight = true;
+                } else {
+                    self.accLeft = true;
+                    self.accRight = false;
+                }
+                return true;
+            },
+            onTouchEnded: function onTouchEnded(touch, event) {
+                self.accLeft = false;
+                self.accRight = false;
             }
         }, self.node);
     },

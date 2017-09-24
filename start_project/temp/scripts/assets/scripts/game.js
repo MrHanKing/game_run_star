@@ -2,7 +2,9 @@
 cc._RF.push(module, 'b92c6KWLeJChZoRXaEBQ9it', 'game');
 // scripts/game.js
 
-"use strict";
+'use strict';
+
+var scoreFX = require('scoreFX');
 
 cc.Class({
     extends: cc.Component,
@@ -20,6 +22,10 @@ cc.Class({
         // ...
         //引用星星预制资源
         starPrefab: {
+            default: null,
+            type: cc.Prefab
+        },
+        scoreFXPrefab: {
             default: null,
             type: cc.Prefab
         },
@@ -58,6 +64,9 @@ cc.Class({
         this.starDuration = 0;
         this.score = 0;
         this.isRunning = false;
+
+        //对象池
+        this.scoreFXPool = new cc.NodePool('scoreFX');
     },
 
     onStartGame: function onStartGame() {
@@ -99,10 +108,15 @@ cc.Class({
     },
 
     //得分
-    gainScore: function gainScore() {
+    gainScore: function gainScore(pos) {
         var self = this;
         self.score += 1;
         self.scoreDisplay.string = "Score:" + self.score.toString();
+        //effect and music
+        var oneSFX = this.spawnScoreFX();
+        this.node.addChild(oneSFX.node);
+        oneSFX.node.setPosition(pos);
+        oneSFX.play();
         cc.audioEngine.playEffect(this.scoreAudio, false);
     },
 
@@ -130,6 +144,22 @@ cc.Class({
     getSceneSize: function getSceneSize() {
         console.log("scene width:", this.node.getContentSize().width);
         return this.node.getContentSize();
+    },
+
+    spawnScoreFX: function spawnScoreFX() {
+        var oneSFX;
+        if (this.scoreFXPool.size() > 0) {
+            oneSFX = this.scoreFXPool.get();
+            return oneSFX.getComponent('scoreFX');
+        } else {
+            oneSFX = cc.instantiate(this.scoreFXPrefab);
+            oneSFX.getComponent('scoreFX').init(this);
+            return oneSFX.getComponent('scoreFX');
+        }
+    },
+
+    despawnScoreFX: function despawnScoreFX(scoreFX) {
+        this.scoreFXPool.put(scoreFX);
     }
     // called every frame, uncomment this function to activate update callback
     // update: function (dt) {

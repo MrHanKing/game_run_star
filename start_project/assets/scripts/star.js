@@ -43,7 +43,7 @@ cc.Class({
     update:function(){
         if (this.getPlayerDistance() < this.pickRadius){
             this.onPicked();
-            this.game.gainScore();
+            this.game.gainScore(this.node.getPosition());
             return;
         }
         //根据存在时间改变星星透明度
